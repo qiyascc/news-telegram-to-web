@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News</title>
+    <style>
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>News</h1>
+    <div id="news-list"></div>
+
+    <h2>Details</h2>
+    <div id="news-details"></div>
+
+    <button id="back-button" class="hidden" onclick="resetNewsItems()">Geri</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var allData = {};
+            $.getJSON("/api/news/", function (data) {
+                allData = data;
+                $.each(data, (userId, newsItems) => {
+                    $("#news-list").append(`<button class='news-btn' data-userid='${userId}'>${userId}</button><br>`);
+                });
+            });
+
+            $('#news-list').on('click', '.news-btn', function () {
+                var newsItems = allData[$(this).data("userid")];
+                var newsDetails = $("#news-details").empty();
+                $.each(newsItems, (index, item) => {
+                    var newsDate = Object.keys(item)[0];
+                    var { text, pic } = item[newsDate];
+                    var newsItemHtml = $(`<div class='news-item'>
+                        <p class='news-preview' onclick='toggleNewsItem(this)'>${text.substring(0, 5)}...</p>
+                        ${pic ? `<img src='${window.location.origin}/${pic}' alt='Photo' class='news-image hidden' style='max-width: 100%; height: auto;'>` : ""}
+                        <div class='full-news hidden'>${text}</div>
+                    </div>`);
+                    newsDetails.append(newsItemHtml);
+                });
+            });
+
+            window.toggleNewsItem = function (element) {
+                var newsItem = $(element).closest('.news-item');
+                $('.news-item').not(newsItem).addClass('hidden');
+                newsItem.find('.news-preview, .full-news, .news-image').toggleClass('hidden');
+                $('#back-button').removeClass('hidden');
+            };
+
+            window.resetNewsItems = function () {
+                $('.news-item, .news-preview').removeClass('hidden');
+                $('.full-news, .news-item img').addClass('hidden');
+                $('#back-button').addClass('hidden');
+            };
+        });
+    </script>
+</body>
+</html>
